@@ -1,21 +1,21 @@
-# <h1>Audit</h1>
-<h3>Audit with Entity Framework</h3>
+# <h1>Audit with Entity Framework</h1>
+<h3>(Example with C# MVC)</h3>
 <b>PS: For This project is work, you need the tables in a database.</b>
 <br />
 
 In this Example, I'm using the Database PostgresSQL
 
-Scripts:
+<h3>Scripts:</h3>
 
--->Schema
+<h4>-->Schema</h4>
 
 CREATE SCHEMA "Audit" AUTHORIZATION postgres;
 
 COMMENT ON SCHEMA "Audit" IS 'standard public schema'
 
---> Tables
+<h4>--> Tables</h4>
 
-Audit:
+<b>Audit:</b>
 
 -- Drop table
 
@@ -39,7 +39,7 @@ CREATE TABLE "Audit"."Audit" (
 ALTER TABLE "Audit"."Audit" OWNER TO postgres;
 GRANT ALL ON TABLE "Audit"."Audit" TO postgres;
 
-Person:
+<b>Person:</b>
 
 -- Drop table
 
