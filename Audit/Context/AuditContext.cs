@@ -22,15 +22,15 @@ namespace Audit.Context
         private static void GerarAuditoriaObj(List<AuditT> auditoriaList, DbEntityEntry entry, string propName, string atual, string original, string acao)
         {
             AuditT audit = new AuditT();
-            audit.tabela = entry.Entity.GetType().Name.Split('_')[0];
-            audit.idlinha = acao == "Deletado" ? Convert.ToInt32(entry.OriginalValues[entry.Entity.GetType().GetProperties().Single(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Count() > 0).Name]) :
+            audit.Entity = entry.Entity.GetType().Name.Split('_')[0];
+            audit.IdAudit = acao == "D" ? Convert.ToInt32(entry.OriginalValues[entry.Entity.GetType().GetProperties().Single(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Count() > 0).Name]) :
                                                  Convert.ToInt32(entry.CurrentValues[entry.Entity.GetType().GetProperties().Single(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Count() > 0).Name]);
-            audit.coluna = propName;
-            audit.valor_atual = atual.ToString();
-            audit.valor_atualizado = original.ToString();
-            audit.dataOcorrencia = System.DateTime.Now;
-            audit.idUsuario = 1;
-            audit.acao = acao;
+            audit.Column = propName;
+            audit.Value_Current = atual.ToString();
+            audit.Value_Original = original.ToString();
+            audit.DateOccurrence = System.DateTime.Now;
+            audit.IdUserModified = 1;
+            audit.Action = acao;
             auditoriaList.Add(audit);
         }
 
@@ -45,15 +45,12 @@ namespace Audit.Context
                 {
                     foreach (var propName in entry.CurrentValues.PropertyNames)
                     {
-                        if (!"DthInclusao.UsuarioInclusaoId.DthAtualizacao.UsuarioAlteracaoId".Contains(propName))
-                        {
-                            var atual = entry.CurrentValues[propName] == null ? "" : entry.CurrentValues[propName].ToString();
-                            var original = entry.OriginalValues[propName] == null ? "" : entry.OriginalValues[propName].ToString();
+                        var atual = entry.CurrentValues[propName] == null ? "" : entry.CurrentValues[propName].ToString();
+                        var original = entry.OriginalValues[propName] == null ? "" : entry.OriginalValues[propName].ToString();
 
-                            if (atual != original)
-                            {
-                                GerarAuditoriaObj(auditoriaList, entry, propName, atual, original, "Modificado");
-                            }
+                        if (atual != original)
+                        {
+                            GerarAuditoriaObj(auditoriaList, entry, propName, atual, original, "M");
                         }
                     }
                 }
@@ -62,12 +59,14 @@ namespace Audit.Context
                 {
                     foreach (var propName in entry.OriginalValues.PropertyNames)
                     {
-                        if (!"DthInclusao.UsuarioInclusaoId.DthAtualizacao.UsuarioAlteracaoId".Contains(propName))
-                        {
-                            var original = entry.OriginalValues[propName] == null ? "" : entry.OriginalValues[propName].ToString();
-                            GerarAuditoriaObj(auditoriaList, entry, propName, "", original, "Deletado");
-                        }
+                        var original = entry.OriginalValues[propName] == null ? "" : entry.OriginalValues[propName].ToString();
+                        GerarAuditoriaObj(auditoriaList, entry, propName, "", original, "D");
                     }
+                }
+
+                foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Added))
+                {
+                    AuditarInclusoes.Add(entry);
                 }
 
                 var saveChanges = base.SaveChanges();
@@ -78,11 +77,8 @@ namespace Audit.Context
                     {
                         foreach (var propName in audit.CurrentValues.PropertyNames)
                         {
-                            if (!"DthInclusao.UsuarioInclusaoId.DthAtualizacao.UsuarioAlteracaoId".Contains(propName))
-                            {
-                                var atual = audit.CurrentValues[propName] == null ? "" : audit.CurrentValues[propName].ToString();
-                                GerarAuditoriaObj(auditoriaList, audit, propName, atual, "", "Adicionado");
-                            }
+                            var atual = audit.CurrentValues[propName] == null ? "" : audit.CurrentValues[propName].ToString();
+                            GerarAuditoriaObj(auditoriaList, audit, propName, atual, "", "I");
                         }
                     }
                 }

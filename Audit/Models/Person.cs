@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Audit.Models
 {
 
-    [Table("Person", Schema = "public")]
+    [Table("Person", Schema = "Audit")]
     public class Person
     {
         [Key]

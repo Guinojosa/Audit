@@ -7,29 +7,29 @@ using System.Web;
 
 namespace Audit.Models
 {
-    [Table("Auditoria", Schema = "public")]
+    [Table("Auditoria", Schema = "Audit")]
     public class AuditT
     {
         [Key]
-        public long idAuditoria { get; set; }
+        public long IdAudit { get; set; }
 
-        public string tabela { get; set; }
+        public string Entity { get; set; }
 
-        public long idlinha { get; set; }
+        public long IdRegister { get; set; }
 
-        public string coluna { get; set; }
-
-        [MaxLength(4000)]
-        public string valor_atual { get; set; }
+        public string Column { get; set; }
 
         [MaxLength(4000)]
-        public string valor_atualizado { get; set; }
+        public string Value_Current { get; set; }
 
-        public DateTime dataOcorrencia { get; set; }
+        [MaxLength(4000)]
+        public string Value_Original { get; set; }
 
-        public long idUsuario { get; set; }
+        public DateTime DateOccurrence { get; set; }
 
-        public string acao { get; set; }
+        public long IdUserModified { get; set; }
+
+        public string Action { get; set; }
 
     }
 }
