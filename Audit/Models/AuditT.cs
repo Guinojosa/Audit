@@ -7,7 +7,7 @@ using System.Web;
 
 namespace Audit.Models
 {
-    [Table("Auditoria", Schema = "Audit")]
+    [Table("Audit", Schema = "Audit")]
     public class AuditT
     {
         [Key]
