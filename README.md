@@ -1,5 +1,5 @@
 # <h1>Audit with Entity Framework</h1>
-<h3>(Example with C# MVC)</h3>
+<h3>(Example with C# Core MVC)</h3>
 <b>PS: For This project is work, you need the tables in a database.</b>
 <br />
 
