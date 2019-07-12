@@ -93,22 +93,35 @@ namespace AuditCore.Context
             {
                 foreach (var propName in entry.CurrentValues.Properties)
                 {
-
-                    switch(entry.State){
+                    var current = "";
+                    var original = "";
+                    switch (entry.State)
+                    {
                         case EntityState.Added:
                             break;
                         case EntityState.Modified:
+                            current = entry.CurrentValues[propName.Name] == null ? "" : entry.CurrentValues[propName.Name].ToString();
+                            original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
                             break;
                         case EntityState.Deleted:
+                            original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
                             break;
                     }
 
-                    var current = entry.CurrentValues[propName.Name] == null ? "" : entry.CurrentValues[propName.Name].ToString();
-                    var original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
+                    current = entry.CurrentValues[propName.Name] == null ? "" : entry.CurrentValues[propName.Name].ToString();
+                    original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
 
-                    if (current != original)
+                    if ((current != original) && entry.State == EntityState.Modified)
                     {
                         GerateAuditObj(AuditList, entry, propName.Name, current, original, "M");
+                    }
+                    else if (entry.State == EntityState.Added)
+                    {
+                        AuditIncludes.Add(entry);
+                    }
+                    else if (entry.State == EntityState.Deleted)
+                    {
+                        GerateAuditObj(AuditList, entry, propName.Name, current, original, "D");
                     }
                 }
             }
