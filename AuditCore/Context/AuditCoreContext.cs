@@ -32,6 +32,9 @@ namespace AuditCore.Context
                 List<AuditT> AuditList = new List<AuditT>();
                 IList<EntityEntry> AuditIncludes = new List<EntityEntry>();
 
+
+                AuditGerator(ChangeTracker.Entries());
+
                 foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Modified))
                 {
                     foreach (var propName in entry.CurrentValues.Properties)
@@ -81,6 +84,33 @@ namespace AuditCore.Context
             {
                 Exception raise = dbEx;
                 throw raise;
+            }
+        }
+
+        private static void AuditGerator(IEnumerable<EntityEntry> ChangeTracker)
+        {
+            foreach (var entry in ChangeTracker)
+            {
+                foreach (var propName in entry.CurrentValues.Properties)
+                {
+
+                    switch(entry.State){
+                        case EntityState.Added:
+                            break;
+                        case EntityState.Modified:
+                            break;
+                        case EntityState.Deleted:
+                            break;
+                    }
+
+                    var current = entry.CurrentValues[propName.Name] == null ? "" : entry.CurrentValues[propName.Name].ToString();
+                    var original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
+
+                    if (current != original)
+                    {
+                        GerateAuditObj(AuditList, entry, propName.Name, current, original, "M");
+                    }
+                }
             }
         }
 
