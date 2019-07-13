@@ -1,4 +1,4 @@
-# <h1>Audit with Entity Framework</h1>
+# <h1>Audit with Entity Framework V 1.0</h1>
 <h3>(Example with C# Core MVC)</h3>
 <b>PS: For This project is work, you need the tables in a database.</b>
 <br />
@@ -56,4 +56,26 @@ CREATE TABLE "Audit"."Person" (
 
 ALTER TABLE "Audit"."Person" OWNER TO postgres;
 GRANT ALL ON TABLE "Audit"."Person" TO postgres;
+
+# <h1>Well, is simple (or not)</h1>
+
+This Audit get all properties in your model, all values in it and save in the table Audit. (This is simple, right?)
+
+<h3>Save With Audit</h3>
+
+In Context, i'm create the method apart for save changes with Audit because you can save some records without Entity,
+gives you more freedom to take advantage of the feature. (Do not be required to fill the table every time :P)
+
+This method take all the records that you add (with Add or AddRange) and separate with EntityState (Modified, Added, Deleted) and 
+save according to your State;
+
+<h3>EntityState.Added</h3>
+
+For Added, i'm get all the ChangeTracker and separate in List, because you need the id of column to save record in Database (To get better consultation).
+
+After first SaveChanges, i'm get the ChangeTracker with all the information what i need and save in table.
+
+<h3>EntityState.Modified(Working)</h3>
+<h3>EntityState.Deleted(Working)</h3>
+
 
