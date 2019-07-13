@@ -20,6 +20,14 @@ namespace AuditCore.Controllers
 
         public IActionResult Index()
         {
+            List<Person> pl = new List<Person>() {
+                new Person(){ Name = "Teste1", Number = "c", Date = DateTime.Now},
+                new Person(){ Name = "Teste2", Number = "b", Date = DateTime.Now},
+                new Person(){ Name = "Teste3", Number = "a", Date = DateTime.Now}
+            };
+            
+            _audit.Person.AddRange(pl);
+            _audit.SaveWithAudit();
             return View();
         }
 

@@ -17,7 +17,7 @@ namespace AuditCore.Context
         public AuditCoreContext(DbContextOptions<AuditCoreContext> options) :
         base(options)
         {
-        }
+        }       
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,54 +25,24 @@ namespace AuditCore.Context
             modelBuilder.Entity<AuditT>().HasKey(x => x.IdAudit);
         }
 
-        public override int SaveChanges()
+        public int SaveWithAudit()
         {
             try
             {
                 List<AuditT> AuditList = new List<AuditT>();
                 IList<EntityEntry> AuditIncludes = new List<EntityEntry>();
 
-
-                AuditGerator(ChangeTracker.Entries());
-
-                foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Modified))
-                {
-                    foreach (var propName in entry.CurrentValues.Properties)
-                    {
-                        var current = entry.CurrentValues[propName.Name] == null ? "" : entry.CurrentValues[propName.Name].ToString();
-                        var original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
-
-                        if (current != original)
-                        {
-                            GerateAuditObj(AuditList, entry, propName.Name, current, original, "M");
-                        }
-                    }
-                }
-
-                foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Deleted))
-                {
-                    foreach (var propName in entry.OriginalValues.Properties)
-                    {
-                        var original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
-                        GerateAuditObj(AuditList, entry, propName.Name, "", original, "D");
-                    }
-                }
-
-                foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Added))
-                {
-                    AuditIncludes.Add(entry);
-                }
-
+                AuditGerator(ChangeTracker.Entries(), AuditList, AuditIncludes);
                 var saveChanges = base.SaveChanges();
 
                 if (AuditIncludes != null)
                 {
                     foreach (var audit in AuditIncludes)
                     {
-                        foreach (var propName in audit.CurrentValues.Properties)
+                        foreach (var prop in audit.CurrentValues.Properties)
                         {
-                            var current = audit.CurrentValues[propName] == null ? "" : audit.CurrentValues[propName].ToString();
-                            GerateAuditObj(AuditList, audit, propName.Name, current, "", "I");
+                            var current = audit.CurrentValues[prop.Name] == null ? "" : audit.CurrentValues[prop.Name].ToString();
+                            GerateAuditObj(AuditList, audit, prop.Name, current, "", "I");
                         }
                     }
                 }
@@ -82,46 +52,26 @@ namespace AuditCore.Context
             }
             catch (Exception dbEx)
             {
-                Exception raise = dbEx;
-                throw raise;
+                throw dbEx;
             }
         }
 
-        private static void AuditGerator(IEnumerable<EntityEntry> ChangeTracker)
+        private static void AuditGerator(IEnumerable<EntityEntry> ChangeTracker, List<AuditT> AuditList, IList<EntityEntry> AuditIncludes)
         {
             foreach (var entry in ChangeTracker)
             {
-                foreach (var propName in entry.CurrentValues.Properties)
+                if (entry.State == EntityState.Added)
                 {
-                    var current = "";
-                    var original = "";
-                    switch (entry.State)
+                    AuditIncludes.Add(entry);
+                }
+                else
+                {
+                    foreach (var prop in entry.CurrentValues.Properties)
                     {
-                        case EntityState.Added:
-                            break;
-                        case EntityState.Modified:
-                            current = entry.CurrentValues[propName.Name] == null ? "" : entry.CurrentValues[propName.Name].ToString();
-                            original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
-                            break;
-                        case EntityState.Deleted:
-                            original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
-                            break;
-                    }
+                        var current = (entry.CurrentValues[prop.Name] == null) && (entry.State == EntityState.Deleted) ? "" : entry.CurrentValues[prop.Name].ToString();
+                        var original = entry.OriginalValues[prop.Name] == null ? "" : entry.OriginalValues[prop.Name].ToString();
 
-                    current = entry.CurrentValues[propName.Name] == null ? "" : entry.CurrentValues[propName.Name].ToString();
-                    original = entry.OriginalValues[propName.Name] == null ? "" : entry.OriginalValues[propName.Name].ToString();
-
-                    if ((current != original) && entry.State == EntityState.Modified)
-                    {
-                        GerateAuditObj(AuditList, entry, propName.Name, current, original, "M");
-                    }
-                    else if (entry.State == EntityState.Added)
-                    {
-                        AuditIncludes.Add(entry);
-                    }
-                    else if (entry.State == EntityState.Deleted)
-                    {
-                        GerateAuditObj(AuditList, entry, propName.Name, current, original, "D");
+                        GerateAuditObj(AuditList, entry, prop.Name, current, original, entry.State == EntityState.Modified ? "M" : "D");
                     }
                 }
             }
@@ -131,8 +81,8 @@ namespace AuditCore.Context
         {
             AuditT audit = new AuditT();
             audit.Entity = entry.Entity.GetType().Name.Split('_')[0];
-            audit.IdAudit = action == "D" ? Convert.ToInt32(entry.OriginalValues[entry.Entity.GetType().GetProperties().Single(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Count() > 0).Name]) :
-                                                 Convert.ToInt32(entry.CurrentValues[entry.Entity.GetType().GetProperties().Single(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Count() > 0).Name]);
+            audit.IdRegister = action == "D" ? Convert.ToInt32(entry.OriginalValues[entry.Entity.GetType().GetProperties().Single(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Count() > 0).Name]) :
+                                               Convert.ToInt32(entry.CurrentValues[entry.Entity.GetType().GetProperties().Single(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Count() > 0).Name]);
             audit.Column = propName;
             audit.Value_Current = current.ToString();
             audit.Value_Original = original.ToString();
@@ -142,12 +92,9 @@ namespace AuditCore.Context
             AuditList.Add(audit);
         }
 
-        public void SaveAudit(List<AuditT> AuditList)
+        private void SaveAudit(List<AuditT> AuditList)
         {
-            foreach (var audit in AuditList)
-            {
-                this.AudiT.Add(audit);
-            }
+            this.AudiT.AddRange(AuditList);
             base.SaveChanges();
         }
 

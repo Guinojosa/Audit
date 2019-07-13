@@ -7,11 +7,10 @@ using System.Web;
 
 namespace AuditCore.Models
 {
-    [Table("Audit", Schema = "Audit")]
+    [Table("AuditT", Schema = "Audit")]
     public class AuditT
     {
-        [Key]
-        public long IdAudit { get; set; }
+        public int IdAudit { get; set; }
 
         public string Entity { get; set; }
 
